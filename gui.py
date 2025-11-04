@@ -1,12 +1,10 @@
 import sys
-import math
 import pygame
 
 from logic import (
     BallWorld,
     WorldConfig,
     InputState,
-    create_default_world,
 )
 
 

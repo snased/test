@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  ball-world:
+    build: .
+    image: ball-world:latest
+    container_name: ball-world
+    environment:
+      - DISPLAY=${DISPLAY:-:0}
+    volumes:
+      # Для Linux/macOS - монтируем X11 socket
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    network_mode: host
+    stdin_open: true
+    tty: true
+
