@@ -156,6 +156,8 @@ class BallWorld:
         if inputs.spit_requests:
             for req in inputs.spit_requests:
                 self._handle_spit_request(req, events)
+            # Prevent re-processing if the same InputState instance is reused
+            inputs.spit_requests.clear()
 
         # 2) Apply suction forces if enabled
         if inputs.sucking_enabled and inputs.pointer is not None:
@@ -278,7 +280,7 @@ class BallWorld:
         kept: List[Ball] = []
         for b in self._balls:
             bx, by = b.position
-            if x <= bx <= x + w and y <= by <= y + h:
+            if x <= bx < x + w and y <= by < y + h:
                 events.emit("deleted", ball_id=b.id)
                 continue
             kept.append(b)
@@ -288,13 +290,16 @@ class BallWorld:
         n = len(self._balls)
         if n <= 1:
             return
+        # Snapshot original colors so multiple collisions in the same frame
+        # use pre-collision colors instead of cascaded updates.
+        original_color_by_id = {b.id: b.color for b in self._balls}
         for i in range(n):
             bi = self._balls[i]
             for j in range(i + 1, n):
                 bj = self._balls[j]
                 if _circles_touch(bi.position, bi.radius, bj.position, bj.radius):
-                    c_old_i = bi.color
-                    c_old_j = bj.color
+                    c_old_i = original_color_by_id.get(bi.id, bi.color)
+                    c_old_j = original_color_by_id.get(bj.id, bj.color)
                     c_mix = vivid_color_mix(c_old_i, c_old_j)
                     # Symmetric mixing; both adopt the mixed color
                     bi.color = c_mix
